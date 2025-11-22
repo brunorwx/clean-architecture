@@ -13,7 +13,7 @@ export class UsersController {
 	) {}
 
 	@Post()
-	async create(@Body() body: any): Promise<UserResponse> {
+	async create(@Body() body: CreateUserDto): Promise<UserResponse> {
 		const user = await this.createUserUseCase.execute(body);
 		return toResponse(user);
 	}

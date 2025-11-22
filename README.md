@@ -82,6 +82,75 @@ Files are grouped by feature (users) and then by layer. This makes it easier to 
 
 ---
 
+**Architecture diagram**
+
+This diagram shows the intended dependency direction: outer layers depend on inner layers. The Domain is the core and must not depend on Application, Presentation, or Infrastructure. Infrastructure implements interfaces declared by Domain.
+
+Mermaid (rendered on GitHub and many Markdown viewers):
+
+```mermaid
+flowchart TB
+  subgraph Presentation[Presentation]
+    Controllers(Controllers)
+  end
+
+  subgraph Application[Application]
+    UseCases(Use-cases / Application Services)
+    DTOs(DTOs / Mappers)
+  end
+
+  subgraph Domain[Domain]
+    Entities(Entities / Business Rules)
+    Repos(Repository Contracts / Abstract Classes)
+    Services(Domain Services)
+  end
+
+  subgraph Infrastructure[Infrastructure]
+    TypeORM[TypeORM Entities & Repositories]
+    OtherInfra[External APIs / Persistence / Adapters]
+  end
+
+  Controllers --> UseCases
+  UseCases --> Entities
+  UseCases --> Repos
+  Entities --> Services
+  Repos ---|implements| TypeORM
+  TypeORM --> Repos
+  OtherInfra --> Repos
+
+  %% Styling to emphasize dependency direction
+  classDef core fill:#fff9c4,stroke:#e0a800
+  classDef infra fill:#e3f2fd,stroke:#1976d2
+  class Domain,Entities,Repos,Services core
+  class Infrastructure,TypeORM,OtherInfra infra
+```
+
+ASCII fallback (for readers or renderers that don't support Mermaid):
+
+```
+                 +--------------------+
+                 |    Presentation    |  <-- Controllers (HTTP layer)
+                 +--------------------+
+                           |
+                           v
+                 +--------------------+
+                 |    Application     |  <-- Use-cases, DTOs, mappers
+                 +--------------------+
+                           |
+                           v
+                 +--------------------+
+                 |      Domain        |  <-- Entities, domain services, repository contracts
+                 +--------------------+
+                           ^
+                           |
+                 +--------------------+
+                 |   Infrastructure   |  <-- TypeORM, external adapters (implements contracts)
+                 +--------------------+
+
+Dependency rule: arrows point toward the domain. Infrastructure implements contracts defined in Domain; Domain remains free of framework-specific code.
+```
+
+
 - **Conventions used in this repo**
 
 - Repository tokens: repository contracts are expressed as an exported `abstract class` (for example `export abstract class IUserRepository { ... }`). We bind a concrete implementation to that abstract class in the infrastructure module. This lets Nest use runtime type metadata so you can inject the repository using the `IUserRepository` type directly (no `@Inject` or `any` required).

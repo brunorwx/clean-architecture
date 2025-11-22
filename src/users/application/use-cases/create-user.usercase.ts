@@ -6,11 +6,11 @@ import { User } from '../../domain/entities/user.entity';
 
 @Injectable()
 export class CreateUserUseCase {
-	constructor(private readonly repository: IUserRepository) {}
+	constructor(private readonly repository: IUserRepository, 
+		private readonly userDomainService: UserDomainService) {}
 
 	async execute(dto: CreateUserDto): Promise<User> {
-		const domainService = new UserDomainService(this.repository);
-		await domainService.ensureEmailIsAvailable(dto.email);
+		await this.userDomainService.ensureEmailIsAvailable(dto.email);
 
 		const user = User.create({ name: dto.name, email: dto.email });
 		await this.repository.save(user);
