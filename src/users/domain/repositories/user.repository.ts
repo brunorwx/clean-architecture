@@ -1,9 +1,8 @@
 import { User } from '../entities/user.entity';
 
-export const USER_REPOSITORY = 'USER_REPOSITORY';
-
-export interface IUserRepository {
-	save(user: User): Promise<void>;
-	findById(id: string): Promise<User | null>;
-	findByEmail(email: string): Promise<User | null>;
+// Use an abstract class as the DI token so Nest can rely on runtime type metadata.
+export abstract class IUserRepository {
+  abstract save(user: User): Promise<void>;
+  abstract findById(id: string): Promise<User | null>;
+  abstract findByEmail(email: string): Promise<User | null>;
 }

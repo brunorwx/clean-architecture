@@ -1,9 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { USER_REPOSITORY } from '../../domain/repositories/user.repository';
+import { Injectable } from '@nestjs/common';
+import { IUserRepository } from '../../domain/repositories/user.repository';
 
 @Injectable()
 export class GetUserUseCase {
-	constructor(@Inject(USER_REPOSITORY) private readonly repository: any) {}
+	constructor(private readonly repository: IUserRepository) {}
 
 	async execute(id: string) {
 		const user = await this.repository.findById(id);
