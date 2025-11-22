@@ -82,9 +82,9 @@ Files are grouped by feature (users) and then by layer. This makes it easier to 
 
 ---
 
-**Conventions used in this repo**
+- **Conventions used in this repo**
 
-- Repository tokens: repository interfaces export a token string, e.g. `export const USER_REPOSITORY = 'USER_REPOSITORY'`. Modules provide a concrete class under that token. This keeps the domain decoupled from the implementation.
+- Repository tokens: repository contracts are expressed as an exported `abstract class` (for example `export abstract class IUserRepository { ... }`). We bind a concrete implementation to that abstract class in the infrastructure module. This lets Nest use runtime type metadata so you can inject the repository using the `IUserRepository` type directly (no `@Inject` or `any` required).
 - Use `User.create()` factory methods in domain entities for validation and invariants.
 - Keep DTOs in `application/dto` as plain interfaces or classes (we can add `class-validator` later for runtime validation).
 - Use `mappers` to convert domain entities to response objects: `toResponse(user)`.
@@ -115,14 +115,15 @@ export class User {
 }
 ```
 
-- Add a repository interface in `src/users/domain/repositories/user.repository.ts`:
+-- Add a repository contract in `src/users/domain/repositories/user.repository.ts` (use an abstract class as DI token):
 
 ```ts
-export const USER_REPOSITORY = 'USER_REPOSITORY';
-export interface IUserRepository {
-  save(user: User): Promise<void>;
-  findById(id: string): Promise<User | null>;
-  findByEmail(email: string): Promise<User | null>;
+import { User } from '../entities/user.entity';
+
+export abstract class IUserRepository {
+  abstract save(user: User): Promise<void>;
+  abstract findById(id: string): Promise<User | null>;
+  abstract findByEmail(email: string): Promise<User | null>;
 }
 ```
 
@@ -134,12 +135,12 @@ export interface IUserRepository {
 export interface CreateUserDto { name: string; email: string }
 ```
 
-- Add use-cases in `src/users/application/use-cases` that orchestrate domain logic and repositories. Example `CreateUserUseCase`:
+-- Add use-cases in `src/users/application/use-cases` that orchestrate domain logic and repositories. Example `CreateUserUseCase` (inject the abstract class directly):
 
 ```ts
 @Injectable()
 export class CreateUserUseCase {
-  constructor(@Inject(USER_REPOSITORY) private readonly repo: any) {}
+  constructor(private readonly repo: IUserRepository) {}
 
   async execute(dto: CreateUserDto) {
     const user = User.create(dto);
@@ -170,7 +171,16 @@ export class UserOrmEntity {
 }
 ```
 
-- Implement the repository that maps between the ORM entity and the domain entity (see `src/users/infrastructure/persistence/user.orm-repository.ts`). Register it in a module with `TypeOrmModule.forFeature([...])` and provide it using the `USER_REPOSITORY` token.
+-- Implement the repository that maps between the ORM entity and the domain entity (see `src/users/infrastructure/persistence/user.orm-repository.ts`). Register it in a module with `TypeOrmModule.forFeature([...])` and provide it under the `IUserRepository` abstract-class token. Example provider:
+
+```ts
+@Module({
+  imports: [TypeOrmModule.forFeature([UserOrmEntity])],
+  providers: [{ provide: IUserRepository, useClass: TypeOrmUserRepository }],
+  exports: [IUserRepository],
+})
+export class UserRepositoryModule {}
+```
 
 4) Presentation
 
@@ -200,7 +210,7 @@ export class UsersController {
 
 5) Module wiring
 
-- Create a feature module `src/users/users.module.ts` and import the `UserRepositoryModule` (which provides the `USER_REPOSITORY` token) and declare controllers and use-case providers there.
+-- Create a feature module `src/users/users.module.ts` and import the `UserRepositoryModule` (which provides the `IUserRepository` token) and declare controllers and use-case providers there.
 
 6) Tests
 
