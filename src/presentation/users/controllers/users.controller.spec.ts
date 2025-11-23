@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { UsersController } from './users.controller';
-import { CreateUserUseCase } from '../../application/use-cases/create-user.usercase';
-import { GetUserUseCase } from '../../application/use-cases/get-user.usecase';
-import { IUserRepository } from '../../domain/repositories/user.repository';
+import { CreateUserUseCase } from '../../../application/users/use-cases/create-user.usercase';
+import { GetUserUseCase } from '../../../application/users/use-cases/get-user.usecase';
+import { IUserRepository } from '../../../domain/users/repositories/user.repository';
 
 describe('UsersController', () => {
   let controller: UsersController;

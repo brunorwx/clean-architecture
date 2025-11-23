@@ -51,25 +51,30 @@ When the app starts it will log the URL, e.g. `Application is running on: http:/
 
 ---
 
-**Project layout (top-level)**
+**Project layout (layer-first)**
 
 - `src/`
   - `app.module.ts` — root module, wires global modules like TypeORM
-  - `main.ts` — application bootstrap (starts Nest and logs the URL)
-  - `users/` — feature module following clean architecture
-    - `application/` — DTOs, mappers and use-cases (application services)
-      - `dto/` — input/output DTO definitions
+  - `main.ts` — application bootstrap (starts Nest, enables ValidationPipe, and logs the URL with Nest `Logger`)
+  - `domain/` — domain layer, contains feature folders (e.g. `domain/users`)
+    - `users/`
+      - `entities/` — domain entities (business models)
+      - `repositories/` — repository interfaces (abstractions / DI tokens)
+      - `services/` — domain services (business rules that need repositories)
+  - `application/` — application layer, contains feature folders (e.g. `application/users`)
+    - `users/`
+      - `dto/` — input/output DTO classes (uses `class-validator`)
       - `mappers/` — convert domain objects to responses and vice-versa
       - `use-cases/` — application use-cases (commands/queries)
-    - `domain/` — pure domain logic
-      - `entities/` — domain entities (business models)
-      - `repositories/` — repository interfaces (abstractions)
-      - `services/` — domain services (business rules that need repositories)
-    - `infrastructure/` — framework and persistence implementations
+  - `infrastructure/` — framework and persistence implementations
+    - `users/`
       - `persistence/` — TypeORM entities and repository implementations
-    - `presentation/` — controllers, request/response shapes
+  - `presentation/` — HTTP layer (controllers and responses)
+    - `users/`
+      - `controllers/` — Nest controllers exposing endpoints
+      - `responses/` — response shapes
 
-Files are grouped by feature (users) and then by layer. This makes it easier to find all code related to a feature.
+Files are organized by layer first (domain/application/infrastructure/presentation) with each feature as a subfolder within the layer. This enforces a clear dependency direction toward the Domain core and makes it easy to find all domain code across features.
 
 ---
 
@@ -155,9 +160,14 @@ Dependency rule: arrows point toward the domain. Infrastructure implements contr
 
 - Repository tokens: repository contracts are expressed as an exported `abstract class` (for example `export abstract class IUserRepository { ... }`). We bind a concrete implementation to that abstract class in the infrastructure module. This lets Nest use runtime type metadata so you can inject the repository using the `IUserRepository` type directly (no `@Inject` or `any` required).
 - Use `User.create()` factory methods in domain entities for validation and invariants.
-- Keep DTOs in `application/dto` as plain interfaces or classes (we can add `class-validator` later for runtime validation).
+- Keep DTOs in `application/dto` as classes and use `class-validator` + `class-transformer` for runtime validation. This project enables a global `ValidationPipe` in `src/main.ts` so controllers automatically validate and transform incoming requests.
 - Use `mappers` to convert domain entities to response objects: `toResponse(user)`.
 - Keep controllers thin: they call use-cases and map results to responses.
+
+- Error handling convention: domain services throw domain-specific error classes (for example `EmailAlreadyInUseError`). Controllers or application use-cases catch those domain errors and translate them into appropriate HTTP exceptions (e.g. `ConflictException`, `NotFoundException`). This keeps domain logic framework-agnostic while providing correct HTTP semantics at the edge.
+- IDs: Entities use `uuid` for identifiers (generated in domain factories).
+- Validation: DTO classes use decorators from `class-validator`. The app sets a global `ValidationPipe` with `whitelist: true` and `transform: true` in `src/main.ts`, so invalid requests are rejected early.
+- Logging: Startup and important lifecycle messages use Nest's `Logger` (not `console.log`), which integrates with Nest logging configuration and supports levels and context.
 
 ---
 

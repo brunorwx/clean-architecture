@@ -4,7 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { TypeOrmUserRepository } from './user.orm-repository';
 import { UserOrmEntity } from './user.orm-entity';
 import { Repository } from 'typeorm';
-import { User } from '../../domain/entities/user.entity';
+import { User } from '../../../domain/users/entities/user.entity';
 
 describe('TypeOrmUserRepository', () => {
   let repo: TypeOrmUserRepository;
