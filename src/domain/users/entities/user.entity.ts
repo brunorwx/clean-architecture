@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 export class User {
   readonly id: string;
@@ -12,7 +12,7 @@ export class User {
   }
 
   static create(props: { id?: string; name: string; email: string }) {
-    const id = props.id ?? uuidv4();
+    const id = props.id ?? randomUUID();
     // Basic email validation
     const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
     if (!emailRegex.test(props.email)) {

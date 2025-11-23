@@ -3,6 +3,7 @@ import { UsersController } from './users.controller';
 import { CreateUserUseCase } from '../../../application/users/use-cases/create-user.usercase';
 import { GetUserUseCase } from '../../../application/users/use-cases/get-user.usecase';
 import { IUserRepository } from '../../../domain/users/repositories/user.repository';
+import { UserDomainService } from '../../../domain/users/services/user.domain-service';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -19,6 +20,7 @@ describe('UsersController', () => {
       controllers: [UsersController],
       providers: [
         CreateUserUseCase,
+        { provide: UserDomainService, useValue: { ensureEmailIsAvailable: jest.fn().mockResolvedValue(undefined) } },
         GetUserUseCase,
         { provide: IUserRepository, useValue: mockRepo },
       ],
