@@ -325,16 +325,4 @@ Operational notes and tips
 - Errors: Throw domain errors from domain/services and translate them to HTTP responses in controllers (use `BadRequestException`, `ConflictException`, etc.).
 - Migrations: For production, prefer migrations rather than `synchronize: true`.
 
-Where to ask questions
 ----------------------
-
-- If you're unsure where to put code, open a short PR describing what you want to add and ask for a review. Keep PRs small and focused.
-
----
-
-This README should give you a concise, practical view of how this repository is organized and how to add new features while following the clean architecture principles used here. If you want, I can also add:
-
-- a README section with a real, step-by-step example that adds a new feature starting from an empty folder (I can implement it), or
-- automated code generators/templates for scaffolding new features.
-
-Pick one and I'll proceed.
